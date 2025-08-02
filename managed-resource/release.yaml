@@ -5,9 +5,9 @@ metadata:
 spec:
   forProvider:
     chart:
-      name: charts/my-app
+      name: my-app
+      repository: https://alexlopes.github.io/sre-playground
       version: "0.1.0"
-    repository: https://github.com/alexlopes/sre-playground.git
     namespace: default
     values:
       # Override default values here
