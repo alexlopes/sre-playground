@@ -1,0 +1,39 @@
+replicaCount: 1
+
+image:
+  repository: busybox
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Simulated external resource configuration
+externalResource:
+  enabled: true
+  sleepDuration: "300" # 5 minutes to simulate long-running external resource
+
+# Post-delete hook configuration
+postDeleteHook:
+  enabled: true
+  image:
+    repository: bitnami/kubectl
+    tag: "latest"
+  # Maximum time to wait for resource deletion (in seconds)
+  maxWaitTime: 300
+  # Check interval (in seconds)
+  checkInterval: 10
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

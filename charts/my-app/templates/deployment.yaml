@@ -1,0 +1,36 @@
+{{- if .Values.externalResource.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-app.fullname" . }}-external-resource
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+    component: external-resource
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "my-app.selectorLabels" . | nindent 6 }}
+      component: external-resource
+  template:
+    metadata:
+      labels:
+        {{- include "my-app.selectorLabels" . | nindent 8 }}
+        component: external-resource
+    spec:
+      containers:
+      - name: external-resource-simulator
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Simulating external resource (like Crossplane AWS resource)..."
+          echo "Resource will run for {{ .Values.externalResource.sleepDuration }} seconds"
+          sleep {{ .Values.externalResource.sleepDuration }}
+          echo "External resource simulation completed"
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+      restartPolicy: Always
+{{- end }}

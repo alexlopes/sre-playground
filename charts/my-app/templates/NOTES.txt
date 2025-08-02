@@ -1,0 +1,25 @@
+1. Your my-app chart has been deployed successfully!
+
+{{- if .Values.externalResource.enabled }}
+2. The external resource simulator is running as a deployment:
+   kubectl get deployment {{ include "my-app.fullname" . }}-external-resource -n {{ .Release.Namespace }}
+
+3. To check the logs of the external resource:
+   kubectl logs -l component=external-resource -n {{ .Release.Namespace }}
+{{- end }}
+
+{{- if .Values.postDeleteHook.enabled }}
+4. When you delete this release, a post-delete hook will validate that the external resource is properly cleaned up.
+
+5. To test the post-delete validation, run:
+   helm uninstall {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+6. Monitor the post-delete hook job:
+   kubectl get jobs -l component=post-delete-hook -n {{ .Release.Namespace }}
+   kubectl logs -l component=post-delete-hook -n {{ .Release.Namespace }}
+{{- end }}
+
+Configuration:
+- External resource sleep duration: {{ .Values.externalResource.sleepDuration }}s
+- Post-delete max wait time: {{ .Values.postDeleteHook.maxWaitTime }}s
+- Check interval: {{ .Values.postDeleteHook.checkInterval }}s

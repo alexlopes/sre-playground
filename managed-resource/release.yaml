@@ -1,0 +1,58 @@
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: my-app-release
+spec:
+  forProvider:
+    chart:
+      name: charts/my-app
+      version: "0.1.0"
+    repository: https://github.com/alexlopes/sre-playground.git
+    namespace: default
+    values:
+      # Override default values here
+      replicaCount: 1
+
+      image:
+        repository: busybox
+        tag: "latest"
+        pullPolicy: IfNotPresent
+
+      # External resource configuration
+      externalResource:
+        enabled: true
+        sleepDuration: "180" # 3 minutes for faster testing
+
+      # Post-delete hook configuration
+      postDeleteHook:
+        enabled: true
+        maxWaitTime: 240 # 4 minutes timeout
+        checkInterval: 10 # Check every 10 seconds
+        image:
+          repository: bitnami/kubectl
+          tag: "latest"
+
+      resources:
+        limits:
+          cpu: 200m
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
+
+    # Install configuration
+    install:
+      createNamespace: true
+      timeout: 300s
+      wait: true
+
+    # Upgrade configuration
+    upgrade:
+      timeout: 300s
+      wait: true
+      cleanupOnFail: true
+
+  # Crossplane managed resource configuration
+  managementPolicies: ["*"]
+  providerConfigRef:
+    name: default

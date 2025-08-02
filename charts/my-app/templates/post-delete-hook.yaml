@@ -1,0 +1,85 @@
+{{- if .Values.postDeleteHook.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "my-app.fullname" . }}-post-delete-validation
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+    component: post-delete-hook
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "my-app.selectorLabels" . | nindent 8 }}
+        component: post-delete-hook
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "my-app.fullname" . }}-post-delete-sa
+      containers:
+      - name: deletion-validator
+        image: "{{ .Values.postDeleteHook.image.repository }}:{{ .Values.postDeleteHook.image.tag }}"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+          
+          NAMESPACE="{{ .Release.Namespace }}"
+          DEPLOYMENT_NAME="{{ include "my-app.fullname" . }}-external-resource"
+          MAX_WAIT_TIME={{ .Values.postDeleteHook.maxWaitTime }}
+          CHECK_INTERVAL={{ .Values.postDeleteHook.checkInterval }}
+          
+          echo "Starting post-delete validation for deployment: $DEPLOYMENT_NAME"
+          echo "Namespace: $NAMESPACE"
+          echo "Max wait time: ${MAX_WAIT_TIME}s, Check interval: ${CHECK_INTERVAL}s"
+          
+          elapsed=0
+          
+          while [ $elapsed -lt $MAX_WAIT_TIME ]; do
+            echo "Checking if deployment $DEPLOYMENT_NAME still exists... (${elapsed}s elapsed)"
+            
+            # Check if deployment exists
+            if ! kubectl get deployment "$DEPLOYMENT_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
+              echo "✅ SUCCESS: Deployment $DEPLOYMENT_NAME has been successfully deleted"
+              
+              # Also check if pods are gone
+              POD_COUNT=$(kubectl get pods -n "$NAMESPACE" -l component=external-resource --no-headers 2>/dev/null | wc -l || echo "0")
+              if [ "$POD_COUNT" -eq 0 ]; then
+                echo "✅ SUCCESS: All related pods have been cleaned up"
+                echo "Post-delete validation completed successfully!"
+                exit 0
+              else
+                echo "⚠️  WARNING: Deployment deleted but $POD_COUNT pods still exist"
+              fi
+            else
+              echo "⏳ Deployment still exists, waiting..."
+            fi
+            
+            sleep $CHECK_INTERVAL
+            elapsed=$((elapsed + CHECK_INTERVAL))
+          done
+          
+          echo "❌ FAILURE: Deployment $DEPLOYMENT_NAME was not deleted within ${MAX_WAIT_TIME}s"
+          echo "This might indicate an issue with the external resource cleanup"
+          
+          # Show current state for debugging
+          echo "Current deployment status:"
+          kubectl describe deployment "$DEPLOYMENT_NAME" -n "$NAMESPACE" || echo "Deployment not found"
+          
+          echo "Current pods:"
+          kubectl get pods -n "$NAMESPACE" -l component=external-resource || echo "No pods found"
+          
+          exit 1
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+  backoffLimit: 3
+{{- end }}
