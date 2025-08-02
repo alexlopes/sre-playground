@@ -12,17 +12,15 @@ spec:
     values:
       # Override default values here
       replicaCount: 1
-
       image:
         repository: busybox
         tag: "latest"
         pullPolicy: IfNotPresent
-
       # External resource configuration
       externalResource:
         enabled: true
         sleepDuration: "180" # 3 minutes for faster testing
-
+        terminationDelay: "60" # 1 minute termination delay for testing
       # Post-delete hook configuration
       postDeleteHook:
         enabled: true
@@ -31,7 +29,6 @@ spec:
         image:
           repository: bitnami/kubectl
           tag: "latest"
-
       resources:
         limits:
           cpu: 200m
@@ -39,18 +36,6 @@ spec:
         requests:
           cpu: 100m
           memory: 128Mi
-
-    # Install configuration
-    install:
-      createNamespace: true
-      timeout: 300s
-      wait: true
-
-    # Upgrade configuration
-    upgrade:
-      timeout: 300s
-      wait: true
-      cleanupOnFail: true
 
   # Crossplane managed resource configuration
   managementPolicies: ["*"]

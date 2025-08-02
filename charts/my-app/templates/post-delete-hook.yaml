@@ -46,17 +46,22 @@ spec:
             if ! kubectl get deployment "$DEPLOYMENT_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
               echo "✅ SUCCESS: Deployment $DEPLOYMENT_NAME has been successfully deleted"
               
-              # Also check if pods are gone
+              # Also check if pods are gone (they might still be terminating)
               POD_COUNT=$(kubectl get pods -n "$NAMESPACE" -l component=external-resource --no-headers 2>/dev/null | wc -l || echo "0")
               if [ "$POD_COUNT" -eq 0 ]; then
                 echo "✅ SUCCESS: All related pods have been cleaned up"
                 echo "Post-delete validation completed successfully!"
+                echo "Total cleanup time: ${elapsed}s"
                 exit 0
               else
-                echo "⚠️  WARNING: Deployment deleted but $POD_COUNT pods still exist"
+                echo "⏳ Deployment deleted but $POD_COUNT pods still terminating (this is normal for Crossplane resources)"
+                # Check pod status
+                kubectl get pods -n "$NAMESPACE" -l component=external-resource -o wide || true
               fi
             else
-              echo "⏳ Deployment still exists, waiting..."
+              echo "⏳ Deployment still exists, waiting for external resource cleanup..."
+              # Show deployment status for debugging
+              kubectl get deployment "$DEPLOYMENT_NAME" -n "$NAMESPACE" -o wide || true
             fi
             
             sleep $CHECK_INTERVAL

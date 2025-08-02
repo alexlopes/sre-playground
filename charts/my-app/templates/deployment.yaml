@@ -28,9 +28,36 @@ spec:
         - |
           echo "Simulating external resource (like Crossplane AWS resource)..."
           echo "Resource will run for {{ .Values.externalResource.sleepDuration }} seconds"
-          sleep {{ .Values.externalResource.sleepDuration }}
-          echo "External resource simulation completed"
+          
+          # Set up signal handler for graceful shutdown
+          trap 'echo "Received termination signal, starting cleanup..."; cleanup_and_exit' TERM
+          
+          cleanup_and_exit() {
+            echo "Simulating Crossplane AWS resource cleanup (e.g., RDS deletion, VPC cleanup)..."
+            echo "This process typically takes {{ .Values.externalResource.terminationDelay }} seconds"
+            sleep {{ .Values.externalResource.terminationDelay }}
+            echo "External resource cleanup completed"
+            exit 0
+          }
+          
+          # Main application loop
+          sleep {{ .Values.externalResource.sleepDuration }} &
+          wait $!
+          echo "External resource simulation completed normally"
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - |
+                echo "PreStop hook: Initiating external resource cleanup..."
+                echo "Simulating AWS resource deletion (RDS, ELB, VPC, etc.)"
+                echo "This delay simulates real Crossplane AWS resource cleanup time"
+                sleep {{ .Values.externalResource.terminationDelay }}
+                echo "PreStop hook: External resource cleanup simulation completed"
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
+      terminationGracePeriodSeconds: {{ add .Values.externalResource.terminationDelay 30 }}
       restartPolicy: Always
 {{- end }}

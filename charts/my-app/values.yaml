@@ -12,6 +12,7 @@ fullnameOverride: ""
 externalResource:
   enabled: true
   sleepDuration: "300" # 5 minutes to simulate long-running external resource
+  terminationDelay: "120" # 2 minutes to simulate Crossplane AWS resource cleanup time
 
 # Post-delete hook configuration
 postDeleteHook:
