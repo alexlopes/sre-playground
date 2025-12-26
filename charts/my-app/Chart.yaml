@@ -2,5 +2,5 @@ apiVersion: v2
 name: my-app
 description: A Helm chart with post-delete hook validation
 type: application
-version: 0.1.5
+version: 0.1.6
 appVersion: "1.0.0"

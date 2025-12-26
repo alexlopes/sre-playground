@@ -1,5 +1,56 @@
 {{- if .Values.postDeleteHook.enabled }}
-apiVersion: batch/v1
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "my-app.fullname" . }}-post-delete-sa
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+    component: post-delete-hook
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "my-app.fullname" . }}-post-delete-role
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+    component: post-delete-hook
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "describe"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "my-app.fullname" . }}-post-delete-binding
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+    component: post-delete-hook
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+subjects:
+- kind: ServiceAccount
+  name: {{ include "my-app.fullname" . }}-post-delete-sa
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "my-app.fullname" . }}-post-delete-role
+  apiGroup: rbac.authorization.k8s.io
+---
+
 kind: Job
 metadata:
   name: {{ include "my-app.fullname" . }}-post-delete-validation
