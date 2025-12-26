@@ -20,5 +20,5 @@ spec:
   {{- end }}
   {{- if .Values.provider.runtimeConfig.enabled }}
   controllerConfigRef:
-    name: {{ .Values.provider.runtimeConfig.name | default "provider-runtime-config" }}
+    name: provider-runtime-kubernetes
   {{- end }}

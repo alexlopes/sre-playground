@@ -2,11 +2,11 @@
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
 metadata:
-  name: {{ .Values.provider.runtimeConfig.name | default "provider-runtime-config" }}
+  name: provider-runtime-kubernetes
   namespace: {{ .Values.provider.namespace | default "crossplane-system" }}
   labels:
     {{- include "my-app.labels" . | nindent 4 }}
-    app.kubernetes.io/component: provider-runtime
+    app.kubernetes.io/component: provider-runtime-kubernetes
 spec:
   {{- with .Values.provider.runtimeConfig.deployment }}
   serviceAccountTemplate:

@@ -3,9 +3,19 @@ entries:
   my-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-26T00:34:29.484407-03:00"
+    created: "2025-12-26T08:50:16.587114-03:00"
     description: A Helm chart with post-delete hook validation
-    digest: f7fc50ff763c00b8f7d7604e02d6c907444cf494545ebc6177c6906f6e597d5d
+    digest: e8936caf88e2dc9c66aae923b553ca37104f27ce048231646f292260b7a92c9b
+    name: my-app
+    type: application
+    urls:
+    - https://alexlopes.github.io/sre-playground/my-app-0.1.5.tgz
+    version: 0.1.5
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-12-26T08:50:16.586697-03:00"
+    description: A Helm chart with post-delete hook validation
+    digest: f1e7d2e45722b01f71b9f4a8365312b75ef3c769ff77771eb6299a4030b642e3
     name: my-app
     type: application
     urls:
@@ -13,7 +23,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-26T00:34:29.484096-03:00"
+    created: "2025-12-26T08:50:16.586272-03:00"
     description: A Helm chart with post-delete hook validation
     digest: ad79a8661871d6b1a64c841e17ef0f7f940a49b2e1de9caae76f312d78460a09
     name: my-app
@@ -23,7 +33,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-26T00:34:29.483619-03:00"
+    created: "2025-12-26T08:50:16.58583-03:00"
     description: A Helm chart with post-delete hook validation
     digest: a178ac8e47cf656bd046d41c5fb3b25b187d4f001877005aa4460018c27cf7ed
     name: my-app
@@ -33,7 +43,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-26T00:34:29.482999-03:00"
+    created: "2025-12-26T08:50:16.585368-03:00"
     description: A Helm chart with post-delete hook validation
     digest: e632cda99cfe8de10939aaf293a3879454e38e3cb3106a0539fcb736e69f6f46
     name: my-app
@@ -41,4 +51,4 @@ entries:
     urls:
     - https://alexlopes.github.io/sre-playground/my-app-0.1.1.tgz
     version: 0.1.1
-generated: "2025-12-26T00:34:29.48205-03:00"
+generated: "2025-12-26T08:50:16.585014-03:00"
