@@ -9,46 +9,8 @@ metadata:
     app.kubernetes.io/component: provider-runtime
 spec:
   {{- with .Values.provider.runtimeConfig.deployment }}
-  deployment:
-    {{- if .replicas }}
-    replicas: {{ .replicas }}
-    {{- end }}
-    serviceAccountName: {{ .serviceAccountName | default "provider-helm-sa" }}
-    {{- with .podSecurityContext }}
-    podSecurityContext:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .securityContext }}
-    securityContext:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .nodeSelector }}
-    nodeSelector:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .tolerations }}
-    tolerations:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .affinity }}
-    affinity:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .resources }}
-    resources:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .env }}
-    env:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .envFrom }}
-    envFrom:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .volumeMounts }}
-    volumeMounts:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
+  serviceAccountTemplate:
+    metadata:
+      name: {{ .serviceAccountName | default "provider-helm-sa" }}
   {{- end }}
 {{- end }}
