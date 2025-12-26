@@ -3,7 +3,17 @@ entries:
   my-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-08-02T14:08:37.688369-03:00"
+    created: "2025-12-25T22:26:02.737289-03:00"
+    description: A Helm chart with post-delete hook validation
+    digest: a178ac8e47cf656bd046d41c5fb3b25b187d4f001877005aa4460018c27cf7ed
+    name: my-app
+    type: application
+    urls:
+    - https://alexlopes.github.io/sre-playground/my-app-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-12-25T22:26:02.736839-03:00"
     description: A Helm chart with post-delete hook validation
     digest: e632cda99cfe8de10939aaf293a3879454e38e3cb3106a0539fcb736e69f6f46
     name: my-app
@@ -11,4 +21,4 @@ entries:
     urls:
     - https://alexlopes.github.io/sre-playground/my-app-0.1.1.tgz
     version: 0.1.1
-generated: "2025-08-02T14:08:37.687538-03:00"
+generated: "2025-12-25T22:26:02.736097-03:00"

@@ -1,0 +1,56 @@
+{{- if .Values.provider.runtimeConfig.enabled }}
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: {{ .Values.provider.runtimeConfig.name | default "provider-runtime-config" }}
+  namespace: {{ .Values.provider.namespace | default "crossplane-system" }}
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: provider-runtime
+spec:
+  {{- with .Values.provider.runtimeConfig.deployment }}
+  deployment:
+    {{- if .replicas }}
+    replicas: {{ .replicas }}
+    {{- end }}
+    {{- if .serviceAccountName }}
+    serviceAccountName: {{ .serviceAccountName }}
+    {{- end }}
+    {{- with .podSecurityContext }}
+    podSecurityContext:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .securityContext }}
+    securityContext:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .nodeSelector }}
+    nodeSelector:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .affinity }}
+    affinity:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .resources }}
+    resources:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .env }}
+    env:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .envFrom }}
+    envFrom:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .volumeMounts }}
+    volumeMounts:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+{{- end }}

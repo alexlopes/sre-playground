@@ -1,0 +1,154 @@
+{{- if .Values.provider.validationJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "my-app.fullname" . }}-provider-readiness
+  namespace: {{ .Values.provider.namespace | default "crossplane-system" }}
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: provider-validation
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.provider.validationJob.backoffLimit | default 3 }}
+  activeDeadlineSeconds: {{ .Values.provider.validationJob.activeDeadlineSeconds | default 300 }}
+  ttlSecondsAfterFinished: {{ .Values.provider.validationJob.ttlSecondsAfterFinished | default 3600 }}
+  template:
+    metadata:
+      labels:
+        {{- include "my-app.labels" . | nindent 8 }}
+        app.kubernetes.io/component: provider-validation
+    spec:
+      serviceAccountName: {{ include "my-app.fullname" . }}-provider-sa
+      restartPolicy: Never
+      containers:
+      - name: provider-readiness-check
+        image: {{ .Values.provider.validationJob.image | default "bitnami/kubectl:latest" }}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        args:
+        - -c
+        - |
+          set -e
+          
+          PROVIDER_NAME="{{ .Values.provider.name | default "provider-aws" }}"
+          PROVIDER_NAMESPACE="{{ .Values.provider.namespace | default "crossplane-system" }}"
+          MAX_RETRIES={{ .Values.provider.validationJob.maxRetries | default 60 }}
+          RETRY_INTERVAL={{ .Values.provider.validationJob.retryInterval | default 10 }}
+          
+          echo "Validating Crossplane Provider: $PROVIDER_NAME in namespace: $PROVIDER_NAMESPACE"
+          
+          # Função para verificar o status do Provider
+          check_provider_status() {
+            echo "Checking Provider status..."
+            kubectl get provider "$PROVIDER_NAME" -n "$PROVIDER_NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Installed")].status}' 2>/dev/null || echo "NotFound"
+          }
+          
+          # Função para verificar os pods do Provider
+          check_provider_pods() {
+            local pod_selector="pkg.crossplane.io/provider=$PROVIDER_NAME"
+            echo "Checking Provider pods with selector: $pod_selector"
+            
+            local ready_pods=$(kubectl get pods -n "$PROVIDER_NAMESPACE" -l "$pod_selector" \
+              -o jsonpath='{range .items[*]}{.metadata.name}{"="}{.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}')
+            
+            if [ -z "$ready_pods" ]; then
+              echo "No pods found for provider $PROVIDER_NAME"
+              return 1
+            fi
+            
+            echo "Pod status:"
+            echo "$ready_pods"
+            
+            # Verificar se todos os pods estão prontos
+            if echo "$ready_pods" | grep -q "=False"; then
+              return 1
+            fi
+            
+            return 0
+          }
+          
+          # Loop de retry
+          RETRY_COUNT=0
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES - Checking provider status..."
+            
+            PROVIDER_STATUS=$(check_provider_status)
+            echo "Provider status: $PROVIDER_STATUS"
+            
+            if [ "$PROVIDER_STATUS" = "True" ]; then
+              if check_provider_pods; then
+                echo "✓ Provider $PROVIDER_NAME is ready!"
+                exit 0
+              fi
+            fi
+            
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Provider not ready yet. Waiting ${RETRY_INTERVAL}s before retry..."
+              sleep "$RETRY_INTERVAL"
+            fi
+          done
+          
+          echo "✗ Provider $PROVIDER_NAME did not become ready within the timeout period"
+          echo "Final Provider Status:"
+          kubectl get provider "$PROVIDER_NAME" -n "$PROVIDER_NAMESPACE" -o yaml || true
+          echo ""
+          echo "Provider Pods:"
+          kubectl get pods -n "$PROVIDER_NAMESPACE" -l "pkg.crossplane.io/provider=$PROVIDER_NAME" -o wide || true
+          
+          exit 1
+        resources:
+          requests:
+            cpu: {{ .Values.provider.validationJob.resources.requests.cpu | default "100m" }}
+            memory: {{ .Values.provider.validationJob.resources.requests.memory | default "128Mi" }}
+          limits:
+            cpu: {{ .Values.provider.validationJob.resources.limits.cpu | default "250m" }}
+            memory: {{ .Values.provider.validationJob.resources.limits.memory | default "256Mi" }}
+      securityContext:
+        runAsNonRoot: false
+        runAsUser: 0
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "my-app.fullname" . }}-provider-sa
+  namespace: {{ .Values.provider.namespace | default "crossplane-system" }}
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "my-app.fullname" . }}-provider-validation
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+rules:
+- apiGroups: ["pkg.crossplane.io"]
+  resources: ["providers"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "my-app.fullname" . }}-provider-validation
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "my-app.fullname" . }}-provider-validation
+subjects:
+- kind: ServiceAccount
+  name: {{ include "my-app.fullname" . }}-provider-sa
+  namespace: {{ .Values.provider.namespace | default "crossplane-system" }}
+{{- end }}

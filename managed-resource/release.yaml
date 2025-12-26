@@ -7,7 +7,7 @@ spec:
     chart:
       name: my-app
       repository: https://alexlopes.github.io/sre-playground
-      version: "0.1.0"
+      version: "0.1.1"
     namespace: default
     values:
       # Override default values here

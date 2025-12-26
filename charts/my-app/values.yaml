@@ -38,3 +38,94 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+# Provider Configuration
+provider:
+  name: provider-aws
+  namespace: crossplane-system
+  image: xpkg.upbound.io/upbound/provider-aws:v0.46.1
+  packagePullPolicy: IfNotPresent
+  revisionActivationPolicy: "Automatic"
+  revisionHistoryLimit: 1
+  skipDependencyResolution: false
+  
+  # DeploymentRuntimeConfig
+  runtimeConfig:
+    enabled: true
+    name: provider-runtime-config
+    deployment:
+      replicas: 1
+      serviceAccountName: provider-account
+      
+      podSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        fsGroup: 65532
+      
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      
+      nodeSelector: {}
+        # kubernetes.io/os: linux
+      
+      tolerations: []
+        # - key: node-type
+        #   operator: Equal
+        #   value: provider
+        #   effect: NoSchedule
+      
+      affinity: {}
+        # podAntiAffinity:
+        #   requiredDuringSchedulingIgnoredDuringExecution:
+        #   - labelSelector:
+        #       matchExpressions:
+        #       - key: app
+        #         operator: In
+        #         values:
+        #         - provider
+      
+      resources:
+        limits:
+          cpu: 1000m
+          memory: 512Mi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+      
+      env:
+        - name: CROSSPLANE_VERBOSE
+          value: "false"
+        # - name: WEBHOOK_TLS_CERT_DIR
+        #   value: /etc/webhook/certs
+      
+      # envFrom:
+      #   - configMapRef:
+      #       name: provider-config
+      #   - secretRef:
+      #       name: provider-credentials
+      
+      # volumeMounts:
+      #   - name: webhook-certs
+      #     mountPath: /etc/webhook/certs
+      #     readOnly: true
+  
+  # Provider Readiness Job Configuration
+  validationJob:
+    enabled: true
+    image: bitnami/kubectl:latest
+    maxRetries: 60
+    retryInterval: 10
+    activeDeadlineSeconds: 300
+    backoffLimit: 3
+    ttlSecondsAfterFinished: 3600
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
