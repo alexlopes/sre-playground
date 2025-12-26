@@ -1,13 +1,13 @@
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: {{ .Values.provider.name | default "provider-aws" }}
+  name: {{ .Values.provider.name | default "provider-kubernetes" }}
   namespace: {{ .Values.provider.namespace | default "crossplane-system" }}
   labels:
     {{- include "my-app.labels" . | nindent 4 }}
     app.kubernetes.io/component: provider
 spec:
-  package: {{ .Values.provider.image | default "xpkg.upbound.io/upbound/provider-aws:v0.46.1" }}
+  package: {{ .Values.provider.image | default "xpkg.upbound.io/upbound/provider-kubernetes:latest" }}
   packagePullPolicy: {{ .Values.provider.packagePullPolicy | default "IfNotPresent" }}
   {{- if .Values.provider.revisionActivationPolicy }}
   revisionActivationPolicy: {{ .Values.provider.revisionActivationPolicy }}
