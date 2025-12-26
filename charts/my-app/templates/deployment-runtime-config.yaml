@@ -13,9 +13,7 @@ spec:
     {{- if .replicas }}
     replicas: {{ .replicas }}
     {{- end }}
-    {{- if .serviceAccountName }}
-    serviceAccountName: {{ .serviceAccountName }}
-    {{- end }}
+    serviceAccountName: {{ .serviceAccountName | default "provider-helm-sa" }}
     {{- with .podSecurityContext }}
     podSecurityContext:
       {{- toYaml . | nindent 6 }}

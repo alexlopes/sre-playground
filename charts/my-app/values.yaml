@@ -55,7 +55,7 @@ provider:
     name: provider-runtime-config
     deployment:
       replicas: 1
-      serviceAccountName: provider-account
+      serviceAccountName: provider-helm-sa
       
       podSecurityContext:
         runAsNonRoot: true
