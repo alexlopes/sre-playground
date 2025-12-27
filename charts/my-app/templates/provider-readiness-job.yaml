@@ -34,6 +34,9 @@ spec:
         - |
           set -e
           
+          echo Sleeping....
+          sleep 60
+
           PROVIDER_NAME="{{ .Values.provider.name | default "provider-aws" }}"
           PROVIDER_NAMESPACE="{{ .Values.provider.namespace | default "crossplane-system" }}"
           MAX_RETRIES={{ .Values.provider.validationJob.maxRetries | default 60 }}
